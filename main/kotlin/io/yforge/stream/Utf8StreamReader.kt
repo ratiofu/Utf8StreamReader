@@ -11,19 +11,20 @@ class Utf8StreamReader(
     client: StreamReaderClient, stream: InputStream, endMarker: String
 ) : Closeable {
 
+  private val reader = stream.bufferedReader(StandardCharsets.UTF_8)
+  private val endMarkerLength = endMarker.length
+  private val self = this
+
+  companion object { private val log = logger() }
+
   override fun close() {
     receiverThread.interrupt()
     try {
       reader.close()
     } catch (ex: Exception) {
-      println("failed to close reader")
-      println(ex)
+      log.warn("failed to close reader", ex)
     }
   }
-
-  private val reader = stream.bufferedReader(StandardCharsets.UTF_8)
-  private val endMarkerLength = endMarker.length
-  private val self = this
 
   fun waitForShutdown() {
     receiverThread.join()
@@ -34,14 +35,14 @@ class Utf8StreamReader(
     isDaemon = true
   ) {
     val myThread = Thread.currentThread()
-    println("started receiver thread ${myThread.id}")
+    log.info("started receiver thread ${myThread.id}")
     val buffer = CharArray(BUFFER_SIZE)
     val builder = StringBuilder(BUFFER_SIZE)
     var charsRead = reader.read(buffer)
     reader.ready()
     while (charsRead != -1) {
       if (myThread.isInterrupted) {
-        println("reader thread has been interrupted!")
+        log.warn("reader thread has been interrupted!")
         throw InterruptedException()
       }
       // capture builder's current length before updating it, to optimize
@@ -58,7 +59,7 @@ class Utf8StreamReader(
           val raw = builder.substring(0, messageEnd)
           builder.delete(0, messageEnd + endMarkerLength)
           searchFrom = 0
-          println("received message: $raw")
+          log.debug("received message: $raw")
           client.handleMessage(raw, self)
         }
       } while (messageEnd > -1)
