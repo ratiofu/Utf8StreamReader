@@ -36,7 +36,6 @@ sourceSets {
 
 dependencies {
   compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$version_kotlin"
-  compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:$version_kotlin_coroutines"
 
   testCompile "org.junit.jupiter:junit-jupiter-api:$version_junit"
   testCompile "org.junit.jupiter:junit-jupiter-params:$version_junit"
@@ -47,12 +46,6 @@ dependencies {
 
 junitPlatform {
   configurationParameter "junit.jupiter.testinstance.lifecycle.default", "per_class"
-}
-
-kotlin {
-  experimental {
-    coroutines 'enable'
-  }
 }
 
 compileKotlin {
